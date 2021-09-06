@@ -1,14 +1,66 @@
-# Welcome to your CDK TypeScript project!
+# Custom API gateway domain
 
-This is a blank project for TypeScript development with CDK.
+When you create an API in AWS, you will be given a random API URL that is generate by AWS upon successful deployment. The URL will often changes on every deployment. 
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+In order to maintain a proper host URL for your API, you will need to map it with a custom domain (eg. api.example-domain.com).
 
-## Useful commands
+## Stack
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+The following demonstrate on how to create the stack needed for a `custom API gateway domain`:
+
+### CDK
+
+Generally when building the configuration your will need the `aws-certificatemanager`, `aws-route53` and `aws-apigateway`. 
+
+```typescript
+import * as cdk from '@aws-cdk/core';
+import { HostedZone } from '@aws-cdk/aws-route53';
+import { Certificate, CertificateValidation } from '@aws-cdk/aws-certificatemanager';
+import { DomainName } from '@aws-cdk/aws-apigateway';
+
+
+export class ApigatewayCustomDomainStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    const zoneName: string = "example-domain.com";
+    const certificateDomain: string = "*.example-domain.com";
+    const domainName: string = "api.example-domain.com";
+
+    const hostedZone = new HostedZone(this, `${id}-hosted-zone`, {
+      zoneName
+    });
+
+    const certificate = new Certificate(this, `${id}-certificate`, {
+      domainName: certificateDomain,
+      validation: CertificateValidation.fromDns(hostedZone)
+    })
+
+    const apiGatewayDomain = new DomainName(this, `${id}-domain`, {
+      domainName,
+      certificate
+    })
+
+    new cdk.CfnOutput(this, `${id}-apigateway-custom-domain-output`, {
+      description: 'The custom domain name of the api gateway',
+      value: apiGatewayDomain.domainName,
+      exportName: 'apiGatewayCustomDomainName'
+    })
+  }
+}
+```
+
+If the certificate needs to be in a different region or you need a cross-region certificate support, you can change the above configuration to the following:
+
+```typescript
+const crossRegionCertificate = new DnsValidatedCertificate(this, `${id}-certificate`, {
+      domainName: certificateDomain,
+      hostedZone: HostedZone.fromLookup(this, `${id}-hostedzone-lookup`, {domainName: zoneName}),
+      region: 'us-east-1'
+    })
+
+const apiGatewayDomain = new DomainName(this, `${id}-domain`, {
+	domainName,
+	certificate: crossRegionCertificate
+})
+```
