@@ -1,6 +1,7 @@
 import * as cdk from '@aws-cdk/core';
 import { LambdaIntegration, RestApi } from '@aws-cdk/aws-apigateway';
 import { Code, Function, Runtime, Tracing } from '@aws-cdk/aws-lambda';
+import * as path from 'path';
 
 export class ApigatewayLambdaStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -11,7 +12,7 @@ export class ApigatewayLambdaStack extends cdk.Stack {
       memorySize: 128,
       functionName: 'example',
       handler: 'index.handler',
-      code: Code.fromAsset('dist'),
+      code: Code.fromAsset(path.resolve(__dirname,'..','dist')),
       tracing: Tracing.ACTIVE
     })
 
