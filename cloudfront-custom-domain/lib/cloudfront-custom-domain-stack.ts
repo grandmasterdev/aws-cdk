@@ -36,7 +36,7 @@ export class CloudfrontCustomDomainStack extends cdk.Stack {
     })
 
     new ARecord(this, `${id}-alias-record`, {
-      zone: HostedZone.fromLookup(this, `${id}-hostedzone`, {
+      zone: HostedZone.fromLookup(this, `${id}-hostedzone-lookup`, {
         domainName
       }),
       target: RecordTarget.fromAlias(

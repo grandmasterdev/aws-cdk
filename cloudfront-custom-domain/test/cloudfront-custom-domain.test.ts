@@ -1,13 +1,20 @@
-import { expect as expectCDK, matchTemplate, MatchStyle } from '@aws-cdk/assert';
+import { expect as expectCDK, matchTemplate, MatchStyle, haveResourceLike } from '@aws-cdk/assert';
 import * as cdk from '@aws-cdk/core';
 import * as CloudfrontCustomDomain from '../lib/cloudfront-custom-domain-stack';
 
-test('Empty Stack', () => {
+test('stack should have resources', () => {
     const app = new cdk.App();
     // WHEN
-    const stack = new CloudfrontCustomDomain.CloudfrontCustomDomainStack(app, 'MyTestStack');
+    const stack = new CloudfrontCustomDomain.CloudfrontCustomDomainStack(app, 'MyTestStack', {
+      env: {
+        region: 'us-east-1',
+        account: '0123456789'
+      }
+    });
     // THEN
-    expectCDK(stack).to(matchTemplate({
-      "Resources": {}
-    }, MatchStyle.EXACT))
+    expectCDK(stack).to(haveResourceLike("AWS::S3::Bucket"))
+    expectCDK(stack).to(haveResourceLike("AWS::Route53::HostedZone"))
+    expectCDK(stack).to(haveResourceLike("AWS::CertificateManager::Certificate"))
+    expectCDK(stack).to(haveResourceLike("AWS::CloudFront::Distribution"))
+    expectCDK(stack).to(haveResourceLike("AWS::Route53::RecordSet"))
 });
