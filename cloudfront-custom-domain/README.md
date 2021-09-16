@@ -54,6 +54,16 @@ const certificate = new Certificate(this, `${id}-certificate`, {
 
 
 
+At this point you have 2 options to go with...
+
+1. [CloudFront Distribution](####CloudFront Distribution)
+
+2. [CloudFrontWebDistribution](####CloudFrontWebDistribution)
+
+   
+
+#### CloudFront Distribution
+
 Create the CloudFront distribution for the S3 Bucket...
 
 ```typescript
@@ -70,7 +80,38 @@ const cloudfront = new Distribution(this, `${id}-distribution`, {
 
 
 
-Map the domain to the CloudFront distribution...
+#### CloudFrontWebDistribution
+
+Create the CloudFrontWebDistribution for the S3 Bucket...
+
+```typescript
+const cloudfront = new CloudFrontWebDistribution(this, `${id}-web-distribution`, {
+      originConfigs: [
+      {
+        s3OriginSource: {
+          s3BucketSource: bucket,
+          originPath: 'index.html'
+        },
+        behaviors: [
+          {
+            isDefaultBehavior: true
+          }
+        ]
+      }
+      ],
+      viewerCertificate: {
+        aliases: [domainName],
+        props: {
+          acmCertificateArn: certificate.certificateArn,
+          minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2021
+        }
+      }
+    }) 
+```
+
+
+
+Map the domain to the CloudFront distribution and you should be done.
 
 ```typescript
 new ARecord(this, `${id}-alias-record`, {
@@ -85,57 +126,11 @@ new ARecord(this, `${id}-alias-record`, {
 
 
 
-The full code should look something like the following...
+---
 
-```typescript
-import * as cdk from '@aws-cdk/core';
-import { Certificate, CertificateValidation } from '@aws-cdk/aws-certificatemanager';
-import { ARecord, HostedZone, RecordTarget } from '@aws-cdk/aws-route53';
-import { CloudFrontTarget } from '@aws-cdk/aws-route53-targets';
-import { Distribution, HttpVersion, SecurityPolicyProtocol } from '@aws-cdk/aws-cloudfront';
-import { S3Origin } from '@aws-cdk/aws-cloudfront-origins';
-import { Bucket } from '@aws-cdk/aws-s3';
+**Note**
 
-export class CloudfrontCustomDomainStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+CloudFront will only use certificate from `us-east-1` region. So you will either need to deploy all your stacks in the region or reference it from there.
 
-    const domainName: string = 'example-domain.com';
-
-    const bucket = new Bucket(this, `${id}-app-bucket`, {
-      bucketName: 'example-app' + this.account
-    })
-
-    const hostedzone = new HostedZone(this, `${id}-hostedzone`, {
-      zoneName: domainName
-    })
-
-    const certificate = new Certificate(this, `${id}-certificate`, {
-      domainName,
-      validation: CertificateValidation.fromDns(hostedzone)
-    });
-
-    const cloudfront = new Distribution(this, `${id}-distribution`, {
-      defaultBehavior: {
-        origin: new S3Origin(bucket)
-      },
-      domainNames: [domainName],
-      certificate: certificate,
-      httpVersion: HttpVersion.HTTP2,
-      minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2021
-    })
-
-    new ARecord(this, `${id}-alias-record`, {
-      zone: HostedZone.fromLookup(this, `${id}-hostedzone`, {
-        domainName
-      }),
-      target: RecordTarget.fromAlias(
-        new CloudFrontTarget(cloudfront)
-      )
-    })
-  }
-}
-
-```
-
+---
 
