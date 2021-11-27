@@ -1,0 +1,34 @@
+{
+  "name": "email-ses",
+  "version": "0.1.0",
+  "bin": {
+    "email-ses": "bin/email-ses.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@aws-cdk/assertions": "1.134.0",
+    "@aws-cdk/aws-iam": "^1.134.0",
+    "@aws-cdk/aws-lambda": "^1.134.0",
+    "@aws-cdk/aws-route53": "^1.134.0",
+    "@aws-cdk/aws-ses": "^1.134.0",
+    "@types/jest": "^27.0.3",
+    "@types/node": "16.11.10",
+    "aws-cdk": "1.134.0",
+    "aws-sdk": "^2.1037.0",
+    "jest": "^27.3.1",
+    "ts-jest": "^27.0.7",
+    "ts-node": "^10.4.0",
+    "typescript": "~4.5.2",
+    "webpack": "^5.64.4",
+    "webpack-cli": "^4.9.1"
+  },
+  "dependencies": {
+    "@aws-cdk/core": "1.134.0",
+    "source-map-support": "^0.5.21"
+  }
+}
